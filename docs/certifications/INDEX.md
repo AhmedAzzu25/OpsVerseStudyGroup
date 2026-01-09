@@ -27,7 +27,7 @@
 | # | Certification | Exam Code | Study Guide | Hours | Target Date |
 |---|---------------|-----------|-------------|-------|-------------|
 | 4 | HashiCorp Terraform Associate | TA-003 | [STUDY_GUIDE.md](terraform/STUDY_GUIDE.md) | 40h | Mar 27 |
-| 5 | GitHub Administration | GH Admin | *(Coming Soon)* | 20h | Apr 15 |
+| 5 | GitHub Administration | GH Admin | [STUDY_GUIDE.md](github-admin/STUDY_GUIDE.md) | 20h | Apr 15 |
 | 6 | AZ-400 DevOps Engineer Expert | AZ-400 | [STUDY_GUIDE.md](az-400/STUDY_GUIDE.md) | 80h | May 14 ⭐ |
 
 **Total Phase 2**: 140 hours | 3 certifications
@@ -38,7 +38,7 @@
 
 | # | Certification | Exam Code | Study Guide | Hours | Target Date |
 |---|---------------|-----------|-------------|-------|-------------|
-| 7 | DP-420 Azure Cosmos DB | DP-420 | *(Coming Soon)* | 35h | May 29 |
+| 7 | DP-420 Azure Cosmos DB | DP-420 | [STUDY_GUIDE.md](dp-420/STUDY_GUIDE.md) | 35h | May 29 |
 | 8 | AZ-305 Solutions Architect | AZ-305 | [STUDY_GUIDE.md](az-305/STUDY_GUIDE.md) | 100h | Jul 27 🏆 |
 
 **Total Phase 3**: 135 hours | 2 certifications
@@ -161,15 +161,15 @@ Every study guide includes:
 
 ## 📈 Study Progress Tracker
 
-### Completed Study Guides: 8/10 (80%)
+### Completed Study Guides: 10/10 (100%) ✅
 
 - [x] GitHub Foundations
 - [x] GitHub Actions
 - [x] AZ-204
 - [x] Terraform Associate
-- [ ] GitHub Admin (pending)
+- [x] GitHub Admin
 - [x] AZ-400
-- [ ] DP-420 (pending)
+- [x] DP-420
 - [x] AZ-305
 - [x] AI-102
 - [x] PCA
