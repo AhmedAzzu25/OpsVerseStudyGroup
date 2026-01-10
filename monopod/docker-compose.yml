@@ -1,0 +1,396 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Edge Layer
+  # ============================================
+  
+  gateway:
+    build: ./apps/gateway
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Identity__Authority=http://identity
+      - ReverseProxy__Routes__ims__Destination=http://ims
+      - ReverseProxy__Routes__booking__Destination=http://booking
+      - ReverseProxy__Routes__billing__Destination=http://billing
+    depends_on:
+      - identity
+      - ims
+    networks:
+      - monopod
+
+  # ============================================
+  # Platform Services
+  # ============================================
+  
+  identity:
+    build: ./platform/identity
+    ports:
+      - "5100:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/identity
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  notifications:
+    build: ./platform/notifications
+    ports:
+      - "5101:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/notifications
+      - SMTP__Host=smtp.sendgrid.net
+      - SMTP__Port=587
+      - SMTP__User=${SENDGRID_USER}
+      - SMTP__Password=${SENDGRID_PASSWORD}
+      - TWILIO__AccountSid=${TWILIO_ACCOUNT_SID}
+      - TWILIO__AuthToken=${TWILIO_AUTH_TOKEN}
+      - TWILIO__FromNumber=${TWILIO_FROM_NUMBER}
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - monopod
+
+  files:
+    build: ./platform/files
+    ports:
+      - "5102:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/files
+      - STORAGE__Provider=MinIO
+      - STORAGE__Endpoint=minio:9000
+      - STORAGE__AccessKey=minioadmin
+      - STORAGE__SecretKey=minioadmin
+    depends_on:
+      - postgres
+      - minio
+    networks:
+      - monopod
+
+  audit:
+    build: ./platform/audit
+    ports:
+      - "5103:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/audit
+    depends_on:
+      - postgres
+    networks:
+      - monopod
+
+  feature-flags:
+    build: ./platform/feature-flags
+    ports:
+      - "5104:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - REDIS_URL=redis://redis:6379
+      - REGION=${REGION:-global}
+    depends_on:
+      - redis
+    networks:
+      - monopod
+
+  jobs:
+    build: ./platform/jobs
+    ports:
+      - "5105:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/jobs
+    depends_on:
+      - postgres
+    networks:
+      - monopod
+
+  # ============================================
+  # Domain Modules
+  # ============================================
+  
+  ims:
+    build: ./modules/ims
+    ports:
+      - "5001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/ims
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - IDENTITY__Authority=http://identity
+      - IDENTITY__Audience=ims-api
+      - AI__AzureOpenAI__Endpoint=${AZURE_OPENAI_ENDPOINT}
+      - AI__AzureOpenAI__Key=${AZURE_OPENAI_KEY}
+      - AI__AzureOpenAI__Deployment=gpt-4
+      - Features__LowStockThreshold=10
+      - Features__EnableAIForecasting=true
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - identity
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # booking:
+  #   build: ./modules/booking
+  #   ports:
+  #     - "5002:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/booking
+  #   depends_on:
+  #     - postgres
+  #     - identity
+  #   networks:
+  #     - monopod
+
+  # billing:
+  #   build: ./modules/billing
+  #   ports:
+  #     - "5003:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - DATABASE_URL=postgresql://postgres:password@postgres:5432/billing
+  #   depends_on:
+  #     - postgres
+  #     - identity
+  #   networks:
+  #     - monopod
+
+  # ============================================
+  # AI & Automation
+  # ============================================
+  
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=n8n
+      - DB_POSTGRESDB_USER=postgres
+      - DB_POSTGRESDB_PASSWORD=password
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./modules/automation/workflows:/home/node/.n8n/workflows
+    depends_on:
+      - postgres
+    networks:
+      - monopod
+
+  # ai-agents:
+  #   build: ./modules/ai-agents
+  #   ports:
+  #     - "5010:8000"
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+  #     - AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}
+  #     - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+  #   depends_on:
+  #     - rabbitmq
+  #   networks:
+  #     - monopod
+
+  # ============================================
+  # Admin Console
+  # ============================================
+  
+  admin-console:
+    build: ./apps/admin-console
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000
+      - REACT_APP_IDENTITY_URL=http://localhost:5100
+    depends_on:
+      - gateway
+    networks:
+      - monopod
+
+  # ============================================
+  # Data Layer
+  # ============================================
+  
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_MULTIPLE_DATABASES=identity,ims,booking,billing,notifications,files,audit,jobs,n8n
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/postgres-init.sh:/docker-entrypoint-initdb.d/init.sh
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001" # Console
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - monopod
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ============================================
+  # Observability
+  # ============================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/metrics/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - monopod
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - ./observability/metrics/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./observability/metrics/grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - monopod
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/logging/loki-config.yml:/etc/loki/local-config.yaml
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monopod
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./observability/logging/promtail-config.yml:/etc/promtail/config.yml
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monopod
+
+  # jaeger:
+  #   image: jaegertracing/all-in-one:latest
+  #   ports:
+  #     - "6831:6831/udp" # Jaeger agent
+  #     - "16686:16686"   # Jaeger UI
+  #   environment:
+  #     - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+  #   networks:
+  #     - monopod
+
+# ============================================
+# Networks
+# ============================================
+
+networks:
+  monopod:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+  minio_data:
+  n8n_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:

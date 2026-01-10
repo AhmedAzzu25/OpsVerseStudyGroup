@@ -1,0 +1,75 @@
+{
+    "region": "gulf",
+    "displayName": "Gulf / Middle East",
+    "locale": "ar-SA",
+    "currency": "SAR",
+    "timezone": "Asia/Riyadh",
+    "vat": {
+        "enabled": true,
+        "type": "VAT",
+        "defaultRate": 0.15,
+        "ratesByCountry": {
+            "SA": 0.15,
+            "AE": 0.05,
+            "BH": 0.10,
+            "KW": 0.00,
+            "OM": 0.05,
+            "QA": 0.00
+        },
+        "zeroRatedCategories": [
+            "healthcare",
+            "education",
+            "financial"
+        ]
+    },
+    "ui": {
+        "rtl": true,
+        "arabicSupport": true,
+        "dateFormat": "DD/MM/YYYY",
+        "timeFormat": "12h",
+        "locale": "ar-SA",
+        "fallbackLocale": "en-US",
+        "calendar": "gregorian",
+        "islamicCalendar": true
+    },
+    "integrations": {
+        "entraId": {
+            "enabled": true,
+            "ssoRequired": true,
+            "tenantIsolation": "strict"
+        },
+        "localAuth": {
+            "enabled": false
+        }
+    },
+    "features": [
+        "islamic-calendar",
+        "prayer-times",
+        "arabic-ui",
+        "rtl-layout",
+        "sso-entra",
+        "multi-currency"
+    ],
+    "compliance": {
+        "frameworks": [
+            "NCA-CSF",
+            "SAMA"
+        ],
+        "dataResidency": "middle-east",
+        "encryptionRequired": true,
+        "localDataStorage": true
+    },
+    "payments": {
+        "preferredGateways": [
+            "hyperpay",
+            "paytabs",
+            "tap"
+        ],
+        "supportedMethods": [
+            "card",
+            "applepay",
+            "stcpay",
+            "mada"
+        ]
+    }
+}

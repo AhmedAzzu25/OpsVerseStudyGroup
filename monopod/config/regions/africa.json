@@ -1,0 +1,89 @@
+{
+    "region": "africa",
+    "displayName": "Africa / Egypt",
+    "locale": "en-EG",
+    "currency": "EGP",
+    "timezone": "Africa/Cairo",
+    "offlineMode": {
+        "enabled": true,
+        "syncStrategy": "manual",
+        "conflictResolution": "last-write-wins",
+        "cacheDurationDays": 30
+    },
+    "lowBandwidth": {
+        "enabled": true,
+        "imageCompression": true,
+        "lazyLoading": true,
+        "dataSaverMode": true,
+        "minifyResponses": true
+    },
+    "notifications": {
+        "channels": [
+            "sms",
+            "whatsapp",
+            "email"
+        ],
+        "preferredChannel": "whatsapp",
+        "smsProvider": "twilio",
+        "whatsappProvider": "twilio",
+        "costOptimized": true
+    },
+    "vat": {
+        "enabled": true,
+        "type": "VAT",
+        "defaultRate": 0.14,
+        "ratesByCountry": {
+            "EG": 0.14,
+            "NG": 0.075,
+            "KE": 0.16,
+            "ZA": 0.15,
+            "GH": 0.125
+        }
+    },
+    "ui": {
+        "rtl": false,
+        "dateFormat": "DD/MM/YYYY",
+        "timeFormat": "12h",
+        "locale": "en-EG",
+        "simplifiedUI": true,
+        "mobileFirst": true
+    },
+    "features": [
+        "offline-sync",
+        "low-bandwidth-mode",
+        "whatsapp-notifications",
+        "sms-priority",
+        "mobile-money",
+        "ussd-support",
+        "progressive-web-app"
+    ],
+    "payments": {
+        "preferredGateways": [
+            "fawry",
+            "paymob",
+            "flutterwave"
+        ],
+        "supportedMethods": [
+            "card",
+            "mobile-money",
+            "cash",
+            "bank-transfer"
+        ],
+        "cashOnDelivery": true
+    },
+    "compliance": {
+        "frameworks": [],
+        "dataResidency": "africa",
+        "encryptionRequired": false,
+        "relaxedCompliance": true
+    },
+    "infrastructure": {
+        "cdn": "cloudflare",
+        "edgeLocations": [
+            "cairo",
+            "lagos",
+            "johannesburg"
+        ],
+        "cachingAggressive": true
+    }
+}

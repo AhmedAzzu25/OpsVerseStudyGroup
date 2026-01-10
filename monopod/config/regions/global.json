@@ -1,0 +1,50 @@
+{
+    "region": "global",
+    "displayName": "Global (Default)",
+    "locale": "en-US",
+    "currency": "USD",
+    "timezone": "UTC",
+    "gdpr": {
+        "enabled": false,
+        "consentRequired": false
+    },
+    "vat": {
+        "enabled": false,
+        "defaultRate": 0.00
+    },
+    "ui": {
+        "rtl": false,
+        "dateFormat": "YYYY-MM-DD",
+        "timeFormat": "24h",
+        "locale": "en-US"
+    },
+    "features": [
+        "multi-language",
+        "multi-currency",
+        "api-access"
+    ],
+    "notifications": {
+        "channels": [
+            "email"
+        ],
+        "preferredChannel": "email"
+    },
+    "compliance": {
+        "frameworks": [],
+        "dataResidency": "auto",
+        "encryptionRequired": true
+    },
+    "rbac": {
+        "strictMode": false,
+        "mfaRequired": false,
+        "sessionTimeout": 60
+    },
+    "audit": {
+        "enhanced": false,
+        "retentionDays": 90
+    },
+    "infrastructure": {
+        "multiRegion": false,
+        "backupFrequency": "daily"
+    }
+}

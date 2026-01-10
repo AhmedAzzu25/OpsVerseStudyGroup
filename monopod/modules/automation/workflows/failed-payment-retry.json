@@ -1,0 +1,182 @@
+{
+    "name": "Failed Payment Retry Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "billing-payment-failed",
+                "responseMode": "lastNode"
+            },
+            "name": "Webhook - Payment Failed",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "unit": "minutes",
+                "amount": 30
+            },
+            "name": "Wait 30 Minutes",
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://billing/api/billing/v1/payments/{{$json[\"paymentId\"]}}/retry",
+                "sendHeaders": true
+            },
+            "name": "Retry Payment",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "string": [
+                        {
+                            "value1": "={{$json[\"status\"]}}",
+                            "value2": "success"
+                        }
+                    ]
+                }
+            },
+            "name": "Check Retry Result",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://notifications/api/notifications/v1/send",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "recipient",
+                            "value": "={{$json[\"customerEmail\"]}}"
+                        },
+                        {
+                            "name": "channel",
+                            "value": "Email"
+                        },
+                        {
+                            "name": "subject",
+                            "value": "Payment Successful"
+                        },
+                        {
+                            "name": "body",
+                            "value": "Your payment has been processed successfully"
+                        }
+                    ]
+                }
+            },
+            "name": "Success Notification",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                1050,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://crm/api/crm/v1/tasks",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "customerId",
+                            "value": "={{$json[\"customerId\"]}}"
+                        },
+                        {
+                            "name": "taskType",
+                            "value": "FOLLOW_UP_PAYMENT_FAILED"
+                        },
+                        {
+                            "name": "description",
+                            "value": "Payment failed after retry. Manual follow-up required."
+                        },
+                        {
+                            "name": "priority",
+                            "value": "HIGH"
+                        }
+                    ]
+                }
+            },
+            "name": "Create CRM Follow-up Task",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                1050,
+                400
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook - Payment Failed": {
+            "main": [
+                [
+                    {
+                        "node": "Wait 30 Minutes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait 30 Minutes": {
+            "main": [
+                [
+                    {
+                        "node": "Retry Payment",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Retry Payment": {
+            "main": [
+                [
+                    {
+                        "node": "Check Retry Result",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check Retry Result": {
+            "main": [
+                [
+                    {
+                        "node": "Success Notification",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Create CRM Follow-up Task",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

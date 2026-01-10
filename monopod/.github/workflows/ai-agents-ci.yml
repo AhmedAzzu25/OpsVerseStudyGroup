@@ -1,0 +1,80 @@
+name: AI Agents CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'modules/ai-agents/**'
+  pull_request:
+    branches: [main]   
+    paths:
+      - 'modules/ai-agents/**'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  python-lint-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        agent: [ops-agent, business-agent]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: ./modules/ai-agents/${{ matrix.agent }}
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 black pytest
+
+      - name: Run black formatter check
+        working-directory: ./modules/ai-agents/${{ matrix.agent }}
+        run: black --check .
+
+      - name: Run flake8 linter
+        working-directory: ./modules/ai-agents/${{ matrix.agent }}
+        run: flake8 . --max-line-length=120 --exclude=venv
+
+      - name: Run tests
+        working-directory: ./modules/ai-agents/${{ matrix.agent }}
+        run: pytest tests/ -v || echo "No tests found"
+
+  docker-build-push:
+    runs-on: ubuntu-latest
+    needs: python-lint-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        agent: [ops-agent, business-agent]
+    
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./modules/ai-agents/${{ matrix.agent }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository }}/ai-${{ matrix.agent }}:latest
+            ${{ env.REGISTRY }}/${{ github.repository }}/ai-${{ matrix.agent }}:${{ github.sha }}

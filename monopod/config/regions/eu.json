@@ -1,0 +1,46 @@
+{
+  "region": "eu",
+  "displayName": "Europe",
+  "locale": "en-GB",
+  "currency": "EUR",
+  "timezone": "Europe/London",
+  "gdpr": {
+    "enabled": true,
+    "consentRequired": true,
+    "retentionDays": 365,
+    "rightToErasure": true,
+    "dataPortability": true,
+    "auditExport": true
+  },
+  "vat": {
+    "enabled": true,
+    "type": "VAT",
+    "defaultRate": 0.20,
+    "ratesByCountry": {
+      "GB": 0.20,
+      "DE": 0.19,
+      "FR": 0.20,
+      "IT": 0.22,
+      "ES": 0.21
+    }
+  },
+  "ui": {
+    "rtl": false,
+    "dateFormat": "DD/MM/YYYY",
+    "timeFormat": "24h",
+    "locale": "en-GB"
+  },
+  "features": [
+    "audit-export",
+    "right-to-be-forgotten",
+    "consent-banner",
+    "privacy-dashboard",
+    "cookie-management"
+  ],
+  "compliance": {
+    "frameworks": ["GDPR"],
+    "dataResidency": "eu-central",
+    "encryptionRequired": true,
+    "breachNotificationHours": 72
+  }
+}

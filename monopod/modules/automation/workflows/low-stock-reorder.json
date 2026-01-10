@@ -1,0 +1,181 @@
+{
+    "name": "Low Stock Reorder Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "ims-low-stock-webhook",
+                "responseMode": "lastNode",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "webhookId": "ims-low-stock"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "number": [
+                        {
+                            "value1": "={{$json[\"currentStock\"]}}",
+                            "operation": "smaller",
+                            "value2": "={{$json[\"threshold\"]}}"
+                        }
+                    ]
+                }
+            },
+            "name": "IF Stock Below Threshold",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://ims/api/ims/v1/purchase-orders",
+                "authentication": "predefinedCredentialType",
+                "nodeCredentialType": "httpHeaderAuth",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "productId",
+                            "value": "={{$json[\"productId\"]}}"
+                        },
+                        {
+                            "name": "quantity",
+                            "value": "={{$json[\"threshold\"] * 2}}"
+                        },
+                        {
+                            "name": "reason",
+                            "value": "Auto-reorder triggered by low stock alert"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Create Purchase Order",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                650,
+                200
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "message",
+                "operation": "send",
+                "to": "{{$json[\"notificationEmail\"]}}",
+                "subject": "Low Stock Alert: {{$json[\"productName\"]}}",
+                "message": "Product {{$json[\"productName\"]}} is low on stock ({{$json[\"currentStock\"]}} units). Purchase order has been created automatically."
+            },
+            "name": "Send Email Notification",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 2,
+            "position": [
+                650,
+                400
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://notifications/api/notifications/v1/send",
+                "sendHeaders": true,
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ]
+                },
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "recipient",
+                            "value": "={{$json[\"notificationPhone\"]}}"
+                        },
+                        {
+                            "name": "channel",
+                            "value": "SMS"
+                        },
+                        {
+                            "name": "subject",
+                            "value": "Low Stock Alert"
+                        },
+                        {
+                            "name": "body",
+                            "value": "Low stock: {{$json[\"productName\"]}}"
+                        }
+                    ]
+                }
+            },
+            "name": "Send SMS",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "IF Stock Below Threshold",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "IF Stock Below Threshold": {
+            "main": [
+                [
+                    {
+                        "node": "Create Purchase Order",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Send Email Notification",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Email Notification": {
+            "main": [
+                [
+                    {
+                        "node": "Send SMS",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {},
+    "staticData": null
+}

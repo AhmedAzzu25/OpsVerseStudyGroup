@@ -1,0 +1,132 @@
+{
+    "name": "No-Show Reschedule Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "booking-no-show",
+                "responseMode": "lastNode"
+            },
+            "name": "Webhook - Appointment No-Show",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://notifications/api/notifications/v1/send",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "recipient",
+                            "value": "={{$json[\"customerPhone\"]}}"
+                        },
+                        {
+                            "name": "channel",
+                            "value": "SMS"
+                        },
+                        {
+                            "name": "subject",
+                            "value": "Missed Appointment"
+                        },
+                        {
+                            "name": "body",
+                            "value": "You missed your appointment on {{$json[\"appointmentDate\"]}}. Would you like to reschedule? Reply YES to confirm."
+                        }
+                    ]
+                }
+            },
+            "name": "Send SMS Notification",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://booking/api/booking/v1/appointments/{{$json[\"appointmentId\"]}}/reschedule-link",
+                "method": "GET"
+            },
+            "name": "Generate Reschedule Link",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                650,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://notifications/api/notifications/v1/send",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "recipient",
+                            "value": "={{$json[\"customerEmail\"]}}"
+                        },
+                        {
+                            "name": "channel",
+                            "value": "Email"
+                        },
+                        {
+                            "name": "subject",
+                            "value": "Reschedule Your Appointment"
+                        },
+                        {
+                            "name": "body",
+                            "value": "Click here to reschedule: {{$json[\"rescheduleLink\"]}}"
+                        }
+                    ]
+                }
+            },
+            "name": "Send Email with Link",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                850,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook - Appointment No-Show": {
+            "main": [
+                [
+                    {
+                        "node": "Send SMS Notification",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send SMS Notification": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Reschedule Link",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Reschedule Link": {
+            "main": [
+                [
+                    {
+                        "node": "Send Email with Link",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

@@ -1,0 +1,106 @@
+{
+    "region": "usa",
+    "displayName": "United States",
+    "locale": "en-US",
+    "currency": "USD",
+    "timezone": "America/New_York",
+    "compliance": {
+        "frameworks": [
+            "SOC2",
+            "HIPAA",
+            "PCI-DSS"
+        ],
+        "soc2": {
+            "enabled": true,
+            "type2": true,
+            "auditFrequency": "annual",
+            "evidenceRetention": 2555
+        },
+        "hipaa": {
+            "enabled": false,
+            "baaRequired": true,
+            "phiHandling": "encrypted"
+        },
+        "pciDss": {
+            "enabled": false,
+            "level": "1"
+        },
+        "dataResidency": "us-east",
+        "encryptionRequired": true
+    },
+    "rbac": {
+        "strictMode": true,
+        "mfaRequired": true,
+        "mfaMethods": [
+            "totp",
+            "sms",
+            "email"
+        ],
+        "sessionTimeout": 30,
+        "passwordPolicy": {
+            "minLength": 12,
+            "requireUppercase": true,
+            "requireLowercase": true,
+            "requireDigits": true,
+            "requireSpecialChars": true,
+            "expireDays": 90,
+            "preventReuse": 5
+        }
+    },
+    "audit": {
+        "enhanced": true,
+        "realTime": true,
+        "immutableLogs": true,
+        "retentionDays": 2555,
+        "siem": "splunk",
+        "evidenceExport": true,
+        "tamperProof": true
+    },
+    "vat": {
+        "enabled": true,
+        "type": "Sales Tax",
+        "calculateByState": true,
+        "avalara": {
+            "enabled": true,
+            "autoCalculate": true
+        }
+    },
+    "ui": {
+        "rtl": false,
+        "dateFormat": "MM/DD/YYYY",
+        "timeFormat": "12h",
+        "locale": "en-US"
+    },
+    "features": [
+        "audit-evidence-export",
+        "soc2-controls",
+        "enhanced-rbac",
+        "mfa-enforcement",
+        "session-recording",
+        "data-classification",
+        "dlp"
+    ],
+    "notifications": {
+        "channels": [
+            "email",
+            "sms",
+            "slack"
+        ],
+        "preferredChannel": "email",
+        "pagerDuty": {
+            "enabled": true,
+            "criticalAlertsOnly": true
+        }
+    },
+    "infrastructure": {
+        "multiRegion": true,
+        "regions": [
+            "us-east-1",
+            "us-west-2"
+        ],
+        "failover": "automatic",
+        "backupFrequency": "hourly",
+        "rto": 1,
+        "rpo": 0.25
+    }
+}

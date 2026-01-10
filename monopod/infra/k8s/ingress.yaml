@@ -1,0 +1,83 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monopod-ingress
+  namespace: monopod
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.monopod.io
+    - identity.monopod.io
+    - grafana.monopod.io
+    secretName: monopod-tls
+  rules:
+  - host: api.monopod.io
+    http:
+      paths:
+      - path: /api/ims
+        pathType: Prefix
+        backend:
+          service:
+            name: ims
+            port:
+              number: 80
+      - path: /api/identity
+        pathType: Prefix
+        backend:
+          service:
+            name: identity
+            port:
+              number: 80
+      - path: /api/notifications
+        pathType: Prefix
+        backend:
+          service:
+            name: notifications
+            port:
+              number: 80
+      - path: /api/files
+        pathType: Prefix
+        backend:
+          service:
+            name: files
+            port:
+              number: 80
+      - path: /api/audit
+        pathType: Prefix
+        backend:
+          service:
+            name: audit
+            port:
+              number: 80
+      - path: /api/feature-flags
+        pathType: Prefix
+        backend:
+          service:
+            name: feature-flags
+            port:
+              number: 80
+  - host: identity.monopod.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: identity
+            port:
+              number: 80
+  - host: grafana.monopod.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 3000

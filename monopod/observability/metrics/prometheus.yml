@@ -1,0 +1,107 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'monopod'
+    environment: 'production'
+
+scrape_configs:
+  # Platform Services
+  - job_name: 'identity-service'
+    static_configs:
+      - targets: ['identity:80']
+        labels:
+          service: 'identity'
+          tier: 'platform'
+
+  - job_name: 'notifications-service'
+    static_configs:
+      - targets: ['notifications:80']
+        labels:
+          service: 'notifications'
+          tier: 'platform'
+
+  - job_name: 'files-service'
+    static_configs:
+      - targets: ['files:80']
+        labels:
+          service: 'files'
+          tier: 'platform'
+
+  - job_name: 'audit-service'
+    static_configs:
+      - targets: ['audit:80']
+        labels:
+          service: 'audit'
+          tier: 'platform'
+
+  - job_name: 'feature-flags-service'
+    static_configs:
+      - targets: ['feature-flags:80']
+        labels:
+          service: 'feature-flags'
+          tier: 'platform'
+
+  - job_name: 'jobs-service'
+    static_configs:
+      - targets: ['jobs:80']
+        labels:
+          service: 'jobs'
+          tier: 'platform'
+
+  # Domain Modules
+  - job_name: 'ims'
+    static_configs:
+      - targets: ['ims:80']
+        labels:
+          service: 'ims'
+          tier: 'domain'
+          module: 'inventory'
+
+  - job_name: 'booking'
+    static_configs:
+      - targets: ['booking:80']
+        labels:
+          service: 'booking'
+          tier: 'domain'
+          module: 'appointments'
+
+  - job_name: 'billing'
+    static_configs:
+      - targets: ['billing:80']
+        labels:
+          service: 'billing'
+          tier: 'domain'
+          module: 'payments'
+
+  # AI Agents
+  - job_name: 'ops-agent'
+    static_configs:
+      - targets: ['ops-agent:8000']
+        labels:
+          service: 'ops-agent'
+          tier: 'ai'
+
+  - job_name: 'business-agent'
+    static_configs:
+      - targets: ['business-agent:8001']
+        labels:
+          service: 'business-agent'
+          tier: 'ai'
+
+  # Infrastructure
+  - job_name: 'postgres-exporter'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  - job_name: 'redis-exporter'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
